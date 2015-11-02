@@ -3,6 +3,8 @@ package com.example.dexter.locateme;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,22 +27,46 @@ import com.example.dexter.locateme.app.AppController;
 import com.example.dexter.locateme.com.google.zxing.integration.android.IntentIntegrator;
 import com.example.dexter.locateme.com.google.zxing.integration.android.IntentResult;
 import com.example.dexter.locateme.utils.MySingleton;
+import com.example.dexter.locateme.utils.PrefManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "SBTAG";
-
+    private PrefManager pref;
+    public ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ImageView imageView = (ImageView)findViewById(R.id.imgtest);
+        imageView = (ImageView)findViewById(R.id.imgtest);
+        pref = new PrefManager(getApplicationContext());
+        if(pref.hasData()){
+            try{
+
+                File f = new File("/sdcard/"+pref.getMap());
+                Log.i("SHWETA","/sdcard/"+pref.getMap());
+                Bitmap bmp = BitmapFactory.decodeFile("/sdcard/" + pref.getMap());
+                imageView.setImageBitmap(bmp);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+
+        }else{
+
+        }
+
     }
 
     @Override
@@ -105,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                                     String ap4 = response.getString("ap4");
                                     String description = response.getString("description");
                                     String imageurl = response.getString("image_url");
+                                    pref.SaveQrData(ap1,ap2,ap3,ap4,description);
 
                                     String finalBaseUrl = null;
                                     try {
@@ -162,8 +189,32 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Bitmap bitmap) {
                 Log.i(TAG, "YOYO2");
-                ImageView imageView = (ImageView)findViewById(R.id.imgtest);
-                imageView.setImageBitmap(bitmap);
+                //ImageView imageView = (ImageView)findViewById(R.id.imgtest);
+                //imageView.setImageBitmap(bitmap);
+                File sdCardDirectory = Environment.getExternalStorageDirectory();
+                String mapName = "locateme.png";
+                File image = new File(sdCardDirectory, mapName);
+                boolean success = false;
+                FileOutputStream outStream;
+                try {
+                    outStream = new FileOutputStream(image);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream);
+                    outStream.flush();
+                    outStream.close();
+                    success = true;
+                    pref.SaveMap(mapName);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (success) {
+                    Toast.makeText(getApplicationContext(), "Map saved with success",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(),
+                            "Error during Map saving", Toast.LENGTH_LONG).show();
+                }
             }
         }, 0, 0, null,
                 new Response.ErrorListener() {
