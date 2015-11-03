@@ -3,6 +3,8 @@ package com.example.dexter.locateme.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.util.Log;
+
 import java.util.HashMap;
 
 /**
@@ -29,7 +31,6 @@ public class PrefManager {
     private static final String AP2 = "ap2";
     private static final String AP3 = "ap3";
     private static final String AP4 = "ap4";
-    private static final String IMAGE_PATH = "imagepath";
     private static final String DESCRIPTION = "description";
     private static final String MAP = "mapLocation";
 
@@ -50,11 +51,11 @@ public class PrefManager {
         editor.putString(AP4, ap4);
         editor.putString(DESCRIPTION, description);
         editor.commit();
+        Log.i("YOYO", "Data is saved");
     }
 
     public void SaveMap(String mapLocation){
-        editor.clear();
-        editor.commit();
+
         editor.putString(MAP,mapLocation);
         editor.commit();
     }
@@ -71,6 +72,11 @@ public class PrefManager {
         return pref.getString(MAP,null);
     }
 
+    public String getDescription(){
+        Log.i("YOYO","I am here" + pref.getString(DESCRIPTION,null));
+        return pref.getString(DESCRIPTION,null);
+
+    }
 
 //    public void createLogin(String username, String name, int age, String gender, String phone, String token) {
 //        editor.putString(KEY_USERNAME, username);

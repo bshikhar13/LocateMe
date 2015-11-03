@@ -10,7 +10,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -40,17 +43,26 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String TAG = "SBTAG";
     private PrefManager pref;
     public ImageView imageView;
+    public Button main_to_map;
+    public TextView mainTextView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         imageView = (ImageView)findViewById(R.id.imgtest);
+        main_to_map = (Button)findViewById(R.id.main_to_map);
+        main_to_map.setOnClickListener(this);
+        mainTextView = (TextView)findViewById(R.id.mainTextView);
         pref = new PrefManager(getApplicationContext());
+        if(pref.getDescription()!=null){
+            mainTextView.setText(pref.getDescription());
+        }
+
         if(pref.hasData()){
             try{
 
@@ -233,6 +245,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.main_to_map:
+                startActivity(new Intent(this,MapActivity.class));
+                break;
+        }
+    }
 }
