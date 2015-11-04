@@ -56,12 +56,13 @@ public class MapActivity extends AppCompatActivity {
 
     public void senddata(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.6/LENdata";
+        String url = "http://192.168.1.6:8080/LENdata";
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
         params.put("rssi", rssi);
         params.put("phone_mac", phone_mac);
+        Log.i("DATA",venue_id + ap_id + rssi + phone_mac);
 
         JsonObjectRequest req = new JsonObjectRequest(url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -123,7 +124,9 @@ public class MapActivity extends AppCompatActivity {
                 for(i=0;i<4;i++){
                     try{
                         ScanResult result = wifi.getScanResults().get(i);
-                        String ap_name = result.BSSID;
+                        String ap_name = result.SSID;
+                        Log.i(TAG, ap_name);
+                        //ap_list.contains(ap_name) || ap_name=="TC 71G"
                         if(ap_list.contains(ap_name)){
                             int rssi = result.level;
                             String rssivalue = String.valueOf(rssi);
