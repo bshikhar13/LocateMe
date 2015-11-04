@@ -1,13 +1,23 @@
 package com.example.dexter.locateme;
 
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RectShape;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.example.dexter.locateme.utils.MyTileView;
 import com.qozix.tileview.TileView;
+import com.qozix.tileview.detail.DetailLevel;
+import com.qozix.tileview.detail.DetailLevelManager;
+import com.qozix.tileview.markers.MarkerLayout;
+import com.qozix.tileview.tiles.Tile;
+
+import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity {
 
@@ -20,18 +30,25 @@ public class MapActivity extends AppCompatActivity {
         TileView tileView = new TileView(this);
         //Change this to pref.getDimensions() after saving the dimension on QR scanning i PrefManager
 
-        tileView.setSize(1600,1200);
+        tileView.setSize(1920, 1080);
         //Change the tile size to be dunamic according to the dimension and complexity of the map
-        tileView.addDetailLevel(2f, "%d_%d.png", 128, 128);
+        tileView.addDetailLevel(1f, "%d_%d.png", 40, 40);
 
 
         ImageView logo = new ImageView( this );
         logo.setImageResource(R.drawable.logo);
-
-        tileView.addMarker(logo,240,240,-0.5f,-1.0f);
+        tileView.addMarker(logo, 100, 100, -0.5f, -1.0f);
+//        DetailLevelManager detailLevelManager = new DetailLevelManager();
+//        DetailLevel detailLevel = new DetailLevel(detailLevelManager,1f,"%d_%d.png",40,40);
+//        Tile tile = new Tile(5,6,1,1,"%d_%d.png",detailLevel);
+//        tileView.getBitmap(tile,this);
 
         setContentView(tileView);
+
+
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
