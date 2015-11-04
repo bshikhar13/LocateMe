@@ -143,7 +143,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     String ap4 = response.getString("ap4");
                                     String description = response.getString("description");
                                     String imageurl = response.getString("image_url");
-                                    pref.SaveQrData(ap1,ap2,ap3,ap4,description);
+                                    String venue_id = response.getString("venue_id");
+                                    pref.SaveQrData(ap1,ap2,ap3,ap4,description,venue_id);
 
                                     String finalBaseUrl = null;
                                     try {
