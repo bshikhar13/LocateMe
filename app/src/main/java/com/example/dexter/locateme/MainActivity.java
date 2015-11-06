@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(pref.hasData()){
             try{
-
                 File f = new File("/sdcard/"+pref.getMap());
                 Log.i("SHWETA","/sdcard/"+pref.getMap());
                 Bitmap bmp = BitmapFactory.decodeFile("/sdcard/" + pref.getMap());
