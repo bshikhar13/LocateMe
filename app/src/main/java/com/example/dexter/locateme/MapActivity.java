@@ -13,11 +13,16 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.dexter.locateme.app.AppController;
+import com.example.dexter.locateme.utils.MySingleton;
 import com.example.dexter.locateme.utils.PrefManager;
 import com.qozix.tileview.TileView;
 import org.json.JSONException;
@@ -44,6 +49,7 @@ public class MapActivity extends AppCompatActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     private PrefManager pref;
+    //RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
 
     private String readStream(InputStream is) {
         try {
@@ -61,7 +67,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void senddata(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.6:8080/LENdata";
+        String url = "http://192.168.1.3:8080/LENdata";
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -86,13 +92,17 @@ public class MapActivity extends AppCompatActivity {
             }
         });
 
+        //To restrict multiple volley requests.
+        req.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 // add the request object to the queue to be executed
-        AppController.getInstance().addToRequestQueue(req);
+        //AppController.getInstance().addToRequestQueue(req);
+        MySingleton.getInstance(this).addToRequestQueue(req);
     }
 
     public void sendDataForSync(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.6:8080/LENdataForSync";
+        String url = "http://192.168.1.3:8080/LENdataForSync";
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -116,9 +126,48 @@ public class MapActivity extends AppCompatActivity {
                 VolleyLog.e("Error: ", error.getMessage());
             }
         });
-
+        //To restrict multiple volley requests.
+        req.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 // add the request object to the queue to be executed
-        AppController.getInstance().addToRequestQueue(req);
+       // AppController.getInstance().addToRequestQueue(req);
+        MySingleton.getInstance(this).addToRequestQueue(req);
+    }
+
+    public ArrayList<Double> getLocation(){
+        String url = "http://192.168.1.3:8080/GetLocation";
+        final ArrayList<Double> result = null;
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,url,null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String x = response.getString("y");
+                            String y = response.getString("x");
+                            double X = Double.parseDouble(x);
+                            double Y = Double.parseDouble(y);
+                            result.add(X);
+                            result.add(Y);
+                            Log.i("STOPPP",response.toString());
+                            Log.e("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Error: ", error.getMessage());
+            }
+        });
+        //To restrict multiple volley requests.
+        req.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+// add the request object to the queue to be executed
+        // AppController.getInstance().addToRequestQueue(req);
+        MySingleton.getInstance(this).addToRequestQueue(req);
+        //Log.i("STOPP", result.toString());
+        return result;
     }
 
     @Override
@@ -134,13 +183,13 @@ public class MapActivity extends AppCompatActivity {
 
         pref = new PrefManager(getApplicationContext());
         //setContentView(R.layout.activity_map);
-        TileView tileView = new TileView(this);
+        final TileView tileView = new TileView(this);
         //Change this to pref.getDimensions() after saving the dimension on QR scanning i PrefManager
 
         tileView.setSize(1920, 1080);
         //Change the tile size to be dunamic according to the dimension and complexity of the map
         tileView.addDetailLevel(1f, "%d_%d.png", 40, 40);
-        ImageView logo = new ImageView( this );
+        final ImageView logo = new ImageView( this );
         logo.setImageResource(R.drawable.logo);
         tileView.addMarker(logo, 100, 100, -0.5f, -1.0f);
         setContentView(tileView);
@@ -155,7 +204,7 @@ public class MapActivity extends AppCompatActivity {
 
         /* Issues :
         1.The loop is running 30 times but enteries in the sync table are more than 30.
-            Need to fix this issue. The later thread is running as expected.
+            Need to fix this issue. The later thread is running as expected. - Solved
         2.The Progressbar is not Showing up
         */
         final WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -173,6 +222,7 @@ public class MapActivity extends AppCompatActivity {
         final int RATE = 1000;
         final int[] count = {29};
         final Timer timer = new Timer();
+
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -180,14 +230,14 @@ public class MapActivity extends AppCompatActivity {
                     timer.cancel();
                 }
                 try{
-                    int i=0;
+                    int i;
                     for(i=0;i<4;i++){
                         try{
                             ScanResult result = wifi.getScanResults().get(i);
                             String ap_name = result.SSID;
                             Log.i(TAG, ap_name);
                             //ap_list.contains(ap_name) || ap_name=="TC 71G"
-                            if(ap_name.equals("TC 71G")){
+                            if(ap_list.contains(ap_name)){
                                 Log.i("TAGISTAG",ap_name);
                                 int rssi = result.level;
                                 String rssivalue = String.valueOf(rssi);
@@ -229,6 +279,11 @@ public class MapActivity extends AppCompatActivity {
                     }
 
                 }
+                ArrayList<Double> a1 = getLocation();
+                //Log.i("STOP",a1.toString());
+                a1.get(0);
+                a1.get(1);
+                //tileView.addMarker(logo,a1.get(0), a1.get(1), -0.5f, -1.0f);
                 h.postDelayed(this, delay);
             }
         }, delay);
