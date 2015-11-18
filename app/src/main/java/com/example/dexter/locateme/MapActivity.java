@@ -2,78 +2,48 @@ package com.example.dexter.locateme;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.media.Image;
+import android.content.DialogInterface;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
+import android.view.View;
 import android.widget.ImageView;
-import android.widget.ListView;
-
+import android.widget.ProgressBar;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.example.dexter.locateme.app.AppController;
 import com.example.dexter.locateme.utils.MySingleton;
 import com.example.dexter.locateme.utils.PrefManager;
 import com.qozix.tileview.TileView;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import android.os.*;
-import android.widget.ProgressBar;
 
 public class MapActivity extends AppCompatActivity {
 
-    public ProgressBar progressBar;
-
     private static final String TAG = "SBActivity";
-    ArrayList<String> items;
-    ArrayAdapter<String> itemsAdapter;
-    private PrefManager pref;
+
     TileView tileView;
     ImageView logo;
-  //  TileView tileView;
-  //  ImageView logo ;
-    //RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
 
-    private String readStream(InputStream is) {
-        try {
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            int i = is.read();
-            while(i != -1) {
-                bo.write(i);
-                i = is.read();
-            }
-            return bo.toString();
-        } catch (IOException e) {
-            return "";
-        }
-    }
 
     public void senddata(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.3:8080/LENdata";
-        HashMap<String, String> params = new HashMap<String, String>();
+        String url = "http://192.168.1.6:8080/LENdata";
+        HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
         params.put("rssi", rssi);
@@ -107,14 +77,14 @@ public class MapActivity extends AppCompatActivity {
 
     public void sendDataForSync(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.3:8080/LENdataForSync";
-        HashMap<String, String> params = new HashMap<String, String>();
+        String url = "http://192.168.1.6:8080/LENdataForSync";
+        HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
         params.put("rssi", rssi);
         params.put("phone_mac", phone_mac);
         Log.i("DATA", venue_id + ap_id + rssi + phone_mac);
-        Log.i(TAG,"I will go to dubai");
+
         JsonObjectRequest req = new JsonObjectRequest(url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -140,7 +110,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     public void getLocation(){
-        String url = "http://192.168.1.3:8080/GetLocation";
+        String url = "http://192.168.1.6:8080/GetLocation";
         //final ArrayList<Double> result = null;
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,url,null,
                 new Response.Listener<JSONObject>() {
@@ -180,29 +150,22 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-        ProgressDialog progress = new ProgressDialog(this);
 
-        progress.setMessage("Syncing...");
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-
-
-        pref = new PrefManager(getApplicationContext());
-        //setContentView(R.layout.activity_map);
-        //TileView tileView = new TileView(this);
+        ProgressBar progressBar = (ProgressBar) findViewById(R.id.mapSyncProgressBar);
+        PrefManager pref = new PrefManager(getApplicationContext());
         //Change this to pref.getDimensions() after saving the dimension on QR scanning i PrefManager
 
         tileView = new TileView(this);
         logo = new ImageView(this);
-        //logo = new ImageView(this);
 
         tileView.setSize(1920, 1080);
-        //Change the tile size to be dunamic according to the dimension and complexity of the map
+        //Change the tile size to be dynamic according to the dimension and complexity of the map
         tileView.addDetailLevel(1f, "%d_%d.png", 40, 40);
-        //logo = new ImageView( this );
         logo.setImageResource(R.drawable.logo);
         tileView.addMarker(logo, 100, 100, -0.5f, -1.0f);
-        setContentView(tileView);
+
+
+
 
         final ArrayList<String> ap_list ;
         ap_list = pref.get_AP_List();
@@ -211,89 +174,114 @@ public class MapActivity extends AppCompatActivity {
 
         //Wifi Scanning Starts Here
 
+        //ProgressBar Implementation
+
+        final ProgressDialog dialog = new ProgressDialog(MapActivity.this);
+        dialog.setTitle("Syncing...");
+        dialog.setMessage("Please wait...");
+        dialog.setIndeterminate(true);
+        dialog.setCancelable(false);
+        dialog.show();
+
+        long delayInMillis = 32000;
+        Timer timerProgress = new Timer();
+        timerProgress.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+            }
+        }, delayInMillis);
+
+        //ProgressBar Implementation Ends
 
         /* Issues :
         1.The loop is running 30 times but enteries in the sync table are more than 30.
             Need to fix this issue. The later thread is running as expected. - Solved
-        2.The Progressbar is not Showing up
+        2.The Progressbar is not Showing up - Solved
         */
         final WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         WifiInfo info = wifi.getConnectionInfo();
         final String phone_mac = info.getMacAddress();
 
-        final Handler h = new Handler();
-        final int delay = 1000; //milliseconds
-
-        progress.show();
-
+        progressBar.setVisibility(View.VISIBLE);
 
         final int DELAY_BEFORE_START = 0;
         final int RATE = 1000;
         final int[] count = {29};
         final Timer timer = new Timer();
-
+        final Timer timerUpdate = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if(count[0]-- ==0){
+                if (count[0]-- == 0) {
                     timer.cancel();
                 }
-                try{
+                try {
                     int i;
-                    for(i=0;i<4;i++){
-                        try{
+                    for (i = 0; i < 4; i++) {
+                        try {
                             ScanResult result = wifi.getScanResults().get(i);
                             String ap_name = result.SSID;
                             Log.i(TAG, ap_name);
                             //ap_list.contains(ap_name) || ap_name=="TC 71G"
-                            if(ap_list.contains(ap_name)){
-                                Log.i("TAGISTAG",ap_name);
+                            if (ap_list.contains(ap_name)) {
+                                Log.i("TAGISTAG", ap_name);
                                 int rssi = result.level;
                                 String rssivalue = String.valueOf(rssi);
                                 sendDataForSync(venue_id, ap_name, rssivalue, phone_mac);
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-                Log.i("TAG", "Fuck BC");
+                Log.i("TAGG", "Its in Timer");
             }
         }, DELAY_BEFORE_START, RATE);
 
-        progress.hide();
-
-        h.postDelayed(new Runnable() {
+        //progress.hide();
+        progressBar.setVisibility(View.GONE);
+        setContentView(tileView);
+        timerUpdate.scheduleAtFixedRate(new TimerTask() {
+            @Override
             public void run() {
                 //itemsAdapter.clear();
                 int i;
-                for (i = 0; i < 4; i++) {
-                    ScanResult result;
-                    try {
-                        result = wifi.getScanResults().get(i);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                    String ap_name = result.SSID;
-                    Log.i(TAG, ap_name);
-                    //ap_list.contains(ap_name) || ap_name=="TC 71G"
-                    if (ap_list.contains(ap_name)) {
-                        int rssi = result.level;
-                        String rssivalue = String.valueOf(rssi);
-                        senddata(venue_id, ap_name, rssivalue, phone_mac);
-                    }
+                try {
+                    for (i = 0; i < 4; i++) {
+                        ScanResult result;
+                        try {
+                            result = wifi.getScanResults().get(i);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            break;
+                        }
+                        String ap_name = result.SSID;
+                        Log.i(TAG, ap_name);
+                        //ap_list.contains(ap_name) || ap_name=="TC 71G"
+                        if (ap_list.contains(ap_name)) {
+                            int rssi = result.level;
+                            String rssivalue = String.valueOf(rssi);
+                            senddata(venue_id, ap_name, rssivalue, phone_mac);
+                        }
 
+                    }
+                    getLocation();
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
-                getLocation();
+
+
                 //tileView.addMarker(logo,a1.get(0), a1.get(1), -0.5f, -1.0f);
-                h.postDelayed(this, delay);
+               // h.postDelayed(this, delay);
+                Log.i("TAGG", "In the Second Timer");
             }
-        }, delay);
+
+        }, 30000,1000 );
 
 
     }
@@ -318,5 +306,21 @@ public class MapActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setTitle("Really Exit?")
+                .setMessage("Are you sure you want to exit?")
+                .setNegativeButton(android.R.string.no, null)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        MapActivity.super.onBackPressed();
+                    }
+                }).create().show();
+
+
     }
 }
