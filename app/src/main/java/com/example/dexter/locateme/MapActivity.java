@@ -28,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.os.*;
@@ -42,7 +43,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void senddata(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.6:8080/LENdata";
+        String url = "http://192.168.1.85:8080/LENdata";
         HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -77,7 +78,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void sendDataForSync(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.6:8080/LENdataForSync";
+        String url = "http://192.168.1.85:8080/LENdataForSync";
         HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -104,15 +105,16 @@ public class MapActivity extends AppCompatActivity {
         //To restrict multiple volley requests.
         req.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 0,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-// add the request object to the queue to be executed
-       // AppController.getInstance().addToRequestQueue(req);
         MySingleton.getInstance(this).addToRequestQueue(req);
     }
 
-    public void getLocation(){
-        String url = "http://192.168.1.6:8080/GetLocation";
-        //final ArrayList<Double> result = null;
-        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,url,null,
+    public void getLocation(String venue_id,String phone_mac){
+        String url = "http://192.168.1.85:8080/GetLocation";
+        HashMap<String, String> params = new HashMap<>();
+        params.put("venue_id", venue_id);
+        params.put("phone_mac", phone_mac);
+
+        JsonObjectRequest req = new JsonObjectRequest(url,new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -178,7 +180,7 @@ public class MapActivity extends AppCompatActivity {
 
         final ProgressDialog dialog = new ProgressDialog(MapActivity.this);
         dialog.setTitle("Syncing...");
-        dialog.setMessage("Please wait...");
+        dialog.setMessage("Please stand still...");
         dialog.setIndeterminate(true);
         dialog.setCancelable(false);
         dialog.show();
@@ -194,11 +196,6 @@ public class MapActivity extends AppCompatActivity {
 
         //ProgressBar Implementation Ends
 
-        /* Issues :
-        1.The loop is running 30 times but enteries in the sync table are more than 30.
-            Need to fix this issue. The later thread is running as expected. - Solved
-        2.The Progressbar is not Showing up - Solved
-        */
         final WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         WifiInfo info = wifi.getConnectionInfo();
@@ -219,9 +216,21 @@ public class MapActivity extends AppCompatActivity {
                 }
                 try {
                     int i;
+                    WifiManager wifi1 = null;
+                    List<ScanResult> results = null;
+                    try{
+                        wifi1 = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                        wifi1.startScan();
+                        results = wifi1.getScanResults();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                     for (i = 0; i < 4; i++) {
                         try {
-                            ScanResult result = wifi.getScanResults().get(i);
+
+
+                            ScanResult result = results.get(i);
                             String ap_name = result.SSID;
                             Log.i(TAG, ap_name);
                             //ap_list.contains(ap_name) || ap_name=="TC 71G"
@@ -249,39 +258,47 @@ public class MapActivity extends AppCompatActivity {
         timerUpdate.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                //itemsAdapter.clear();
                 int i;
                 try {
+
+                    WifiManager wifi1;
+                    List<ScanResult> results = null;
+                    try{
+                        wifi1 = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                        wifi1.startScan();
+                        results = wifi1.getScanResults();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                     for (i = 0; i < 4; i++) {
-                        ScanResult result;
+
                         try {
-                            result = wifi.getScanResults().get(i);
+                            ScanResult result = results.get(i);
+                            String ap_name = result.SSID;
+                            Log.i(TAG, ap_name);
+                            //ap_list.contains(ap_name) || ap_name=="TC 71G"
+                            if (ap_list.contains(ap_name)) {
+                                int rssi = result.level;
+                                String rssivalue = String.valueOf(rssi);
+                                senddata(venue_id, ap_name, rssivalue, phone_mac);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                             break;
                         }
-                        String ap_name = result.SSID;
-                        Log.i(TAG, ap_name);
-                        //ap_list.contains(ap_name) || ap_name=="TC 71G"
-                        if (ap_list.contains(ap_name)) {
-                            int rssi = result.level;
-                            String rssivalue = String.valueOf(rssi);
-                            senddata(venue_id, ap_name, rssivalue, phone_mac);
-                        }
+
 
                     }
-                    getLocation();
+                    getLocation(venue_id,phone_mac);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
 
-
-                //tileView.addMarker(logo,a1.get(0), a1.get(1), -0.5f, -1.0f);
-               // h.postDelayed(this, delay);
                 Log.i("TAGG", "In the Second Timer");
             }
 
-        }, 30000,1000 );
+        }, 30000, 1000);
 
 
     }
