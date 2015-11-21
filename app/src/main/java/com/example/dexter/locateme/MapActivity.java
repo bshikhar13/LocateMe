@@ -160,7 +160,7 @@ public class MapActivity extends AppCompatActivity {
         tileView = new TileView(this);
         logo = new ImageView(this);
 
-        tileView.setSize(1920, 1080);
+        tileView.setSize(1120, 1200);
         //Change the tile size to be dynamic according to the dimension and complexity of the map
         tileView.addDetailLevel(1f, "%d_%d.png", 40, 40);
         logo.setImageResource(R.drawable.logo);
