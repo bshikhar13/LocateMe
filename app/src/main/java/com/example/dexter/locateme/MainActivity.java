@@ -139,7 +139,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     String ap1 = response.getString("ap1");
                                     String ap2 = response.getString("ap2");
                                     String ap3 = response.getString("ap3");
-                                    String ap4 = response.getString("ap4");
+                                    //String ap4 = response.getString("ap4");
+                                    String ap4 = "Blank";
                                     String description = response.getString("description");
                                     String imageurl = response.getString("image_url");
                                     String venue_id = response.getString("venue_id");

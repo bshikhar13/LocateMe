@@ -43,7 +43,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void senddata(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.85:8080/LENdata";
+        String url = "http://192.168.1.223:8080/LENdata";
         HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -78,7 +78,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void sendDataForSync(String venue_id,String ap_id,String rssi, String phone_mac){
         Log.i(TAG,"I am here");
-        String url = "http://192.168.1.85:8080/LENdataForSync";
+        String url = "http://192.168.1.223:8080/LENdataForSync";
         HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("ap_id", ap_id);
@@ -109,7 +109,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     public void getLocation(String venue_id,String phone_mac){
-        String url = "http://192.168.1.85:8080/GetLocation";
+        String url = "http://192.168.1.223:8080/GetLocation";
         HashMap<String, String> params = new HashMap<>();
         params.put("venue_id", venue_id);
         params.put("phone_mac", phone_mac);
@@ -226,7 +226,7 @@ public class MapActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    for (i = 0; i < 4; i++) {
+                    for (i = 0; i < 10; i++) {
                         try {
 
 
@@ -271,7 +271,7 @@ public class MapActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    for (i = 0; i < 4; i++) {
+                    for (i = 0; i < 10; i++) {
 
                         try {
                             ScanResult result = results.get(i);

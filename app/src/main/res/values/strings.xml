@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">LocateMe</string>
+    <string name="app_name">LEN</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="overflown_qr">Scan QR Code</string>
-    <string name="title_activity_map">MapActivity</string>
-    <string name="Main_to_Map_Button">Take me to the Map</string>
+    <string name="title_activity_map">Your Location</string>
+    <string name="Main_to_Map_Button">Find my Location</string>
 </resources>
